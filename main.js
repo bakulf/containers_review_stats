@@ -2,6 +2,10 @@ class Stats {
   #intl;
   #data;
   #stopwords;
+  #reviewsWithBody;
+  #reviewPage = 1;
+  #reviewsPerPage = 20;
+  #timeChart;
 
   constructor() {
     this.#intl = new Intl.NumberFormat();
@@ -17,14 +21,20 @@ class Stats {
 
   #showData(data) {
     this.#data = data;
+    this.#reviewsWithBody = data.filter(a => a.body);
 
     document.getElementById("totalReviews").innerText = this.#intl.format(this.#data.length);
-    document.getElementById("totalMsgs").innerText = this.#intl.format(this.#data.filter(a => a.body).length);
+    document.getElementById("totalMsgs").innerText = this.#intl.format(this.#reviewsWithBody.length);
     document.getElementById("avgRate").innerText = this.#intl.format(this.#data.map(a => a.score).reduce((partialSum, a) => partialSum + a, 0) / this.#data.length);
 
     this.#reviewByRate(data);
-    this.#reviewsByTime(data);
     this.#tagCloud(data);
+    this.#reviewBodies();
+    this.#reviewsByTime(data, 'month');
+
+    document.querySelectorAll('input[name="timeScale"]').forEach(el => {
+      el.addEventListener('change', e => this.#reviewsByTime(this.#data, e.target.value));
+    });
   }
 
   #reviewByRate(data) {
@@ -56,30 +66,32 @@ class Stats {
     });
   }
 
-
-  #reviewsByTime(data) {
+ #reviewsByTime(data, unit = 'day') {
+    if (this.#timeChart) this.#timeChart.destroy();
     const dataset = {};
-    const daysSet = new Set();
+    const labelsSet = new Set();
     for (const r of data) {
-      const day = r.created.substring(0, 10);
-      daysSet.add(day);
-      if (!dataset["total"]) dataset["total"] = {};
+  const key = unit === 'year' ? r.created.substring(0, 4)
+                 : unit === 'month' ? r.created.substring(0, 7)
+                 : r.created.substring(0, 10);
+      labelsSet.add(key);
+      if (!dataset['total']) dataset['total'] = {};
       if (!dataset[r.score]) dataset[r.score] = {};
-      if (!dataset["total"][day]) dataset["total"][day] = 0;
-      if (!dataset[r.score][day]) dataset[r.score][day] = 0;
-      dataset["total"][day]++;
-      dataset[r.score][day]++;
+      if (!dataset['total'][key]) dataset['total'][key] = 0;
+      if (!dataset[r.score][key]) dataset[r.score][key] = 0;
+      dataset['total'][key]++;
+      dataset[r.score][key]++;
     }
 
-    const labels = Array.from(daysSet).sort();
+    const labels = Array.from(labelsSet).sort();
     const datasets = Object.keys(dataset).sort().map(score => ({
       label: score,
-      data: labels.map(day => dataset[score][day] || 0)
+      data: labels.map(key => dataset[score][key] || 0)
     }));
 
-    const ctx = document.getElementById("reviewsByTime");
-    const chart = new Chart(ctx, {
-      type: "line",
+   const ctx = document.getElementById('reviewsByTime');
+    this.#timeChart = new Chart(ctx, {
+      type: 'line',
       data: {
         labels,
         datasets,
@@ -87,9 +99,9 @@ class Stats {
       options: {
         scales: {
           x: {
-            type: "time",
+            type: 'time',
             time: {
-              unit: "month"
+              unit: unit
             }
           },
           y: {
@@ -107,8 +119,6 @@ class Stats {
       }
     });
   }
-
-
 
   #tagCloud(data) {
     const words = {};
@@ -133,6 +143,46 @@ class Stats {
       span.classList.add("me-2");
       span.innerText = word;
       container.appendChild(span);
+    }
+  }
+
+  #reviewBodies() {
+    this.#renderReviewPage();
+  }
+
+  #renderReviewPage() {
+    const start = (this.#reviewPage - 1) * this.#reviewsPerPage;
+    const slice = this.#reviewsWithBody.slice(start, start + this.#reviewsPerPage);
+    const list = document.getElementById("reviewList");
+    list.innerHTML = "";
+    for (const r of slice) {
+      const li = document.createElement("li");
+      li.classList.add("list-group-item");
+      li.innerText = r.body;
+      list.appendChild(li);
+    }
+    this.#renderReviewPagination();
+  }
+
+  #renderReviewPagination() {
+    const pagination = document.getElementById("reviewPagination");
+    pagination.innerHTML = "";
+    const pages = Math.ceil(this.#reviewsWithBody.length / this.#reviewsPerPage);
+    for (let i = 1; i <= pages; i++) {
+      const li = document.createElement("li");
+      li.classList.add("page-item");
+      if (i === this.#reviewPage) li.classList.add("active");
+      const a = document.createElement("a");
+      a.classList.add("page-link");
+      a.href = "#";
+      a.innerText = i;
+      a.addEventListener("click", e => {
+        e.preventDefault();
+        this.#reviewPage = i;
+        this.#renderReviewPage();
+      });
+      li.appendChild(a);
+      pagination.appendChild(li);
     }
   }
 }

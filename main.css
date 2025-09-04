@@ -37,3 +37,12 @@ canvas {
   display: inline-block;
   margin: 0.25em;
 }
+
+.time-scale .form-check-input {
+  transform: scale(0.9);
+}
+
+.time-scale .form-check-label {
+  margin-right: 0.5em;
+  font-size: 0.9em;
+}
