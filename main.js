@@ -22,6 +22,8 @@ class Stats {
   #showData(data) {
     this.#data = data;
     this.#reviewsWithBody = data.filter(a => a.body);
+    const csvBtn = document.getElementById("downloadCsv");
+    if (csvBtn) csvBtn.addEventListener("click", () => this.#downloadCSV());
 
     document.getElementById("totalReviews").innerText = this.#intl.format(this.#data.length);
     document.getElementById("totalMsgs").innerText = this.#intl.format(this.#reviewsWithBody.length);
@@ -212,6 +214,24 @@ class Stats {
 
     createItem("Next", this.#reviewPage + 1, this.#reviewPage === pages);
     createItem("Last", pages, this.#reviewPage === pages);
+  }
+
+  #downloadCSV() {
+    if (!this.#data) return;
+    const header = ["body", "created", "score"];
+    const rows = this.#data.filter(r => r.body).map(r => [
+      (r.body || "").replace(/"/g, '""'),
+      r.created,
+      r.score
+    ]);
+    const csvContent = [header.join(","), ...rows.map(row => row.map(f => `"${f}"`).join(","))].join("\n");
+    const blob = new Blob([csvContent], { type: "text/csv" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = "data.csv";
+    a.click();
+    URL.revokeObjectURL(url);
   }
 }
 
