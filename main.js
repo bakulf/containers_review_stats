@@ -16,6 +16,7 @@ class Stats {
     document.getElementById("avgRate").innerText = this.#intl.format(this.#data.map(a => a.score).reduce((partialSum, a) => partialSum + a, 0) / this.#data.length);
 
     this.#reviewByRate(data);
+    this.#reviewsByTime(data);
   }
 
   #reviewByRate(data) {
@@ -41,6 +42,51 @@ class Stats {
         plugins: {
           legend: {
             display: false
+          },
+        },
+      }
+    });
+  }
+
+
+  #reviewsByTime(data) {
+    const dataset = {};
+    for (const r of data) {
+      const day = r.created.substring(0, 10);
+      if (!dataset[day]) dataset[day] = 0;
+      dataset[day]++;
+    }
+
+    const labels = Object.keys(dataset).sort();
+    const values = labels.map(day => dataset[day]);
+
+    const ctx = document.getElementById("reviewsByTime");
+    const chart = new Chart(ctx, {
+      type: "line",
+      data: {
+        labels,
+        datasets: [{
+          data: values
+        }],
+      },
+      options: {
+        scales: {
+          x: {
+            type: "time",
+            time: {
+              unit: "month"
+            }
+          },
+          y: {
+            beginAtZero: true,
+            ticks: {
+              precision: 0
+            }
+          }
+        },
+        plugins: {
+          legend: {
+            display: false,
           },
         },
       }
