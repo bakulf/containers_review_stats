@@ -1,11 +1,18 @@
 class Stats {
   #intl;
   #data;
+  #stopwords;
 
   constructor() {
     this.#intl = new Intl.NumberFormat();
 
-    fetch("./data.json").then(r => r.json()).then(data => this.#showData(data));
+    Promise.all([
+      fetch("./data.json").then(r => r.json()),
+      fetch("./stopwords_en.json").then(r => r.json())
+    ]).then(([data, stopwords]) => {
+      this.#stopwords = new Set(stopwords);
+      this.#showData(data);
+    });
   }
 
   #showData(data) {
@@ -109,12 +116,13 @@ class Stats {
       if (!r.body) continue;
       const tokens = r.body.toLowerCase().replace(/[^\w\s]/g, " ").split(/\s+/);
       for (const t of tokens) {
-        if (!t) continue;
+        if (!t || t.length < 3) continue;
+        if (this.#stopwords && this.#stopwords.has(t)) continue;
         words[t] = (words[t] || 0) + 1;
       }
     }
 
-    const sorted = Object.entries(words).sort((a, b) => b[1] - a[1]).slice(0, 50);
+    const sorted = Object.entries(words).sort((a, b) => b[1] - a[1]).slice(0, 200);
     const max = sorted.length > 0 ? sorted[0][1] : 0;
     const container = document.getElementById("tagCloud");
     container.innerHTML = "";
