@@ -52,23 +52,30 @@ class Stats {
 
   #reviewsByTime(data) {
     const dataset = {};
+    const daysSet = new Set();
     for (const r of data) {
       const day = r.created.substring(0, 10);
-      if (!dataset[day]) dataset[day] = 0;
-      dataset[day]++;
+      daysSet.add(day);
+      if (!dataset["total"]) dataset["total"] = {};
+      if (!dataset[r.score]) dataset[r.score] = {};
+      if (!dataset["total"][day]) dataset["total"][day] = 0;
+      if (!dataset[r.score][day]) dataset[r.score][day] = 0;
+      dataset["total"][day]++;
+      dataset[r.score][day]++;
     }
 
-    const labels = Object.keys(dataset).sort();
-    const values = labels.map(day => dataset[day]);
+    const labels = Array.from(daysSet).sort();
+    const datasets = Object.keys(dataset).sort().map(score => ({
+      label: score,
+      data: labels.map(day => dataset[score][day] || 0)
+    }));
 
     const ctx = document.getElementById("reviewsByTime");
     const chart = new Chart(ctx, {
       type: "line",
       data: {
         labels,
-        datasets: [{
-          data: values
-        }],
+        datasets,
       },
       options: {
         scales: {
@@ -87,7 +94,7 @@ class Stats {
         },
         plugins: {
           legend: {
-            display: false,
+            display: true,
           },
         },
       }
