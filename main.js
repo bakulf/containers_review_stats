@@ -168,7 +168,32 @@ class Stats {
     const pagination = document.getElementById("reviewPagination");
     pagination.innerHTML = "";
     const pages = Math.ceil(this.#reviewsWithBody.length / this.#reviewsPerPage);
-    for (let i = 1; i <= pages; i++) {
+
+    const createItem = (label, page, disabled) => {
+      const li = document.createElement("li");
+      li.classList.add("page-item");
+      if (disabled) li.classList.add("disabled");
+      const a = document.createElement("a");
+      a.classList.add("page-link");
+      a.href = "#";
+      a.innerText = label;
+      a.addEventListener("click", e => {
+        e.preventDefault();
+        if (disabled) return;
+        this.#reviewPage = page;
+        this.#renderReviewPage();
+      });
+      li.appendChild(a);
+      pagination.appendChild(li);
+    };
+
+    createItem("First", 1, this.#reviewPage === 1);
+    createItem("Prev", this.#reviewPage - 1, this.#reviewPage === 1);
+
+    const start = Math.max(1, this.#reviewPage - 2);
+    const end = Math.min(pages, this.#reviewPage + 2);
+    for (let i = start; i <= end; i++) {
+      if (i === 1 || i === pages) continue;
       const li = document.createElement("li");
       li.classList.add("page-item");
       if (i === this.#reviewPage) li.classList.add("active");
@@ -184,6 +209,9 @@ class Stats {
       li.appendChild(a);
       pagination.appendChild(li);
     }
+
+    createItem("Next", this.#reviewPage + 1, this.#reviewPage === pages);
+    createItem("Last", pages, this.#reviewPage === pages);
   }
 }
 
