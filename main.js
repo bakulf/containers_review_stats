@@ -31,6 +31,7 @@ class Stats {
 
     this.#reviewByRate(data);
     this.#tagCloud(data);
+    this.#reviewByLanguage(data);
     this.#reviewBodies();
     this.#reviewsByTime(data, 'month');
 
@@ -146,6 +147,53 @@ class Stats {
       span.innerText = word;
       container.appendChild(span);
     }
+  }
+
+  #reviewByLanguage(data) {
+    const stopwords = {
+      en: ["the", "and", "is", "to", "of", "in"],
+      es: ["el", "la", "y", "en", "es", "que"],
+      it: ["il", "la", "e", "che", "di", "un"],
+      fr: ["le", "la", "et", "les", "de", "un"],
+      de: ["der", "die", "und", "ist", "zu", "das"],
+    };
+
+    const counts = {};
+    for (const r of data) {
+      if (!r.body) continue;
+      const tokens = r.body.toLowerCase().split(/\W+/);
+      let max = 0;
+      let lang = "other";
+      for (const [code, words] of Object.entries(stopwords)) {
+        let count = 0;
+        for (const w of words) {
+          if (tokens.includes(w)) count++;
+        }
+        if (count > max) {
+          max = count;
+          lang = code;
+        }
+      }
+      counts[lang] = (counts[lang] || 0) + 1;
+    }
+
+    const display = new Intl.DisplayNames(["en"], { type: "language" });
+    const labels = Object.keys(counts).map(k => k === "other" ? "Other" : display.of(k));
+    const dataset = Object.values(counts);
+
+    const ctx = document.getElementById("reviewByLang");
+    new Chart(ctx, {
+      type: "bar",
+      data: {
+        labels,
+        datasets: [{ data: dataset }],
+      },
+      options: {
+        plugins: {
+          legend: { display: false },
+        },
+      },
+    });
   }
 
   #reviewBodies() {
