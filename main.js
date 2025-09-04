@@ -17,6 +17,7 @@ class Stats {
 
     this.#reviewByRate(data);
     this.#reviewsByTime(data);
+    this.#tagCloud(data);
   }
 
   #reviewByRate(data) {
@@ -91,6 +92,33 @@ class Stats {
         },
       }
     });
+  }
+
+
+
+  #tagCloud(data) {
+    const words = {};
+    for (const r of data) {
+      if (!r.body) continue;
+      const tokens = r.body.toLowerCase().replace(/[^\w\s]/g, " ").split(/\s+/);
+      for (const t of tokens) {
+        if (!t) continue;
+        words[t] = (words[t] || 0) + 1;
+      }
+    }
+
+    const sorted = Object.entries(words).sort((a, b) => b[1] - a[1]).slice(0, 50);
+    const max = sorted.length > 0 ? sorted[0][1] : 0;
+    const container = document.getElementById("tagCloud");
+    container.innerHTML = "";
+    for (const [word, count] of sorted) {
+      const span = document.createElement("span");
+      const size = 0.8 + (count / max) * 1.2;
+      span.style.fontSize = size + "em";
+      span.classList.add("me-2");
+      span.innerText = word;
+      container.appendChild(span);
+    }
   }
 }
 

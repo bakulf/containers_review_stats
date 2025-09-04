@@ -32,3 +32,8 @@
 canvas {
   margin: 1em;
 }
+
+#tagCloud span {
+  display: inline-block;
+  margin: 0.25em;
+}
