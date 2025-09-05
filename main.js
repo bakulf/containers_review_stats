@@ -328,7 +328,7 @@ class Stats {
   #downloadCSV() {
     if (!this.#data) return;
     const header = ["body", "created", "score"];
-    const rows = this.#data.filter(r => r.body).map(r => [
+    const rows = this.#data.map(r => [
       (r.body || "").replace(/"/g, '""'),
       r.created,
       r.score
