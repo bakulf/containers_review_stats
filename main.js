@@ -251,7 +251,11 @@ class Stats {
     for (const r of slice) {
       const li = document.createElement("li");
       li.classList.add("list-group-item");
-      li.innerText = r.body;
+      const badge = document.createElement("span");
+      badge.classList.add("badge", "bg-secondary", "me-2");
+      badge.innerText = r.score;
+      li.appendChild(badge);
+      li.appendChild(document.createTextNode(r.body));
       list.appendChild(li);
     }
     this.#renderReviewPagination();
