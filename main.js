@@ -2,7 +2,9 @@ class Stats {
   #intl;
   #data;
   #stopwords;
+  #allReviewsWithBody;
   #reviewsWithBody;
+  #selectedScores;
   #reviewPage = 1;
   #reviewsPerPage = 20;
   #timeChart;
@@ -21,7 +23,9 @@ class Stats {
 
   #showData(data) {
     this.#data = data;
-    this.#reviewsWithBody = data.filter(a => a.body);
+    this.#allReviewsWithBody = data.filter(a => a.body);
+    this.#reviewsWithBody = this.#allReviewsWithBody;
+    this.#selectedScores = new Set(this.#allReviewsWithBody.map(r => r.score));
     const csvBtn = document.getElementById("downloadCsv");
     if (csvBtn) csvBtn.addEventListener("click", () => this.#downloadCSV());
 
@@ -197,6 +201,45 @@ class Stats {
   }
 
   #reviewBodies() {
+
+    this.#setupScoreFilters();
+    this.#filterReviewsByScore();
+  }
+
+  #setupScoreFilters() {
+    const container = document.getElementById("scoreFilters");
+    if (!container) return;
+    container.innerHTML = "";
+    const scores = Array.from(new Set(this.#allReviewsWithBody.map(r => r.score))).sort();
+    for (const score of scores) {
+      const wrapper = document.createElement("div");
+      wrapper.classList.add("form-check", "form-check-inline");
+
+      const input = document.createElement("input");
+      input.classList.add("form-check-input");
+      input.type = "checkbox";
+      input.id = `scoreFilter${score}`;
+      input.value = score;
+      input.checked = true;
+      input.addEventListener("change", () => this.#filterReviewsByScore());
+
+      const label = document.createElement("label");
+      label.classList.add("form-check-label");
+      label.htmlFor = input.id;
+      label.innerText = score;
+
+      wrapper.appendChild(input);
+      wrapper.appendChild(label);
+      container.appendChild(wrapper);
+    }
+  }
+
+  #filterReviewsByScore() {
+    const checkboxes = document.querySelectorAll('#scoreFilters input[type="checkbox"]');
+    const active = new Set(Array.from(checkboxes).filter(cb => cb.checked).map(cb => parseInt(cb.value)));
+    this.#selectedScores = active;
+    this.#reviewsWithBody = this.#allReviewsWithBody.filter(r => active.has(r.score));
+    this.#reviewPage = 1;
     this.#renderReviewPage();
   }
 
@@ -218,6 +261,8 @@ class Stats {
     const pagination = document.getElementById("reviewPagination");
     pagination.innerHTML = "";
     const pages = Math.ceil(this.#reviewsWithBody.length / this.#reviewsPerPage);
+
+    if (pages === 0) return;
 
     const createItem = (label, page, disabled) => {
       const li = document.createElement("li");
