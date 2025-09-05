@@ -33,6 +33,15 @@ class Stats {
     document.getElementById("totalMsgs").innerText = this.#intl.format(this.#reviewsWithBody.length);
     document.getElementById("avgRate").innerText = this.#intl.format(this.#data.map(a => a.score).reduce((partialSum, a) => partialSum + a, 0) / this.#data.length);
 
+    // Show latest review date in genStats
+    const genStatsEl = document.getElementById('genStats');
+    if (genStatsEl && this.#data.length) {
+      const latestIso = this.#data.reduce((max, r) => (r.created > max ? r.created : max), this.#data[0].created);
+      const latestDate = new Date(latestIso);
+      const dateFmt = new Intl.DateTimeFormat(undefined, { dateStyle: 'medium' });
+      genStatsEl.innerText = `Updated through: ${dateFmt.format(latestDate)}`;
+    }
+
     this.#reviewByRate(data);
     this.#tagCloud(data);
     this.#reviewByLanguage(data);
