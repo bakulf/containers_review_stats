@@ -258,6 +258,18 @@ class Stats {
       li.appendChild(document.createTextNode(r.body));
       list.appendChild(li);
     }
+    // Update range counter: "Showing X–Y of Z"
+    const bodyTotalEl = document.getElementById("bodyTotal");
+    if (bodyTotalEl) {
+      const total = this.#reviewsWithBody.length;
+      if (total === 0) {
+        bodyTotalEl.innerText = "Showing 0 of 0";
+      } else {
+        const from = start + 1;
+        const to = start + slice.length;
+        bodyTotalEl.innerText = `Showing ${this.#intl.format(from)}–${this.#intl.format(to)} of ${this.#intl.format(total)}`;
+      }
+    }
     this.#renderReviewPagination();
   }
 

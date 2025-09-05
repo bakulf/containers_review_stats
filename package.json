@@ -4,6 +4,10 @@
   "description": "",
   "main": "a.js",
   "scripts": {
+    "start": "npm run serve",
+    "serve": "python3 -m http.server 8000",
+    "crawl": "node tools/crawler.js",
+    "data": "node tools/normalizer.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "author": "",

@@ -28,7 +28,7 @@ async function magic() {
 
     if (stop) break;
 
-    fs.writeFileSync("/tmp/output.txt", JSON.stringify(rr));
+    fs.writeFileSync("output.json", JSON.stringify(rr));
     ++page;
   }
 }
